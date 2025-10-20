@@ -31,23 +31,34 @@ spec:
         - secretRef:
             name: luis-mencia-secret
         
-        # Health checks
+        # Startup probe - Da más tiempo para que la app inicie
+        startupProbe:
+          httpGet:
+            path: /actuator/health
+            port: 5002
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 30  # 30 intentos = 5 minutos máximo
+        
+        # Liveness probe - Verifica que la app siga viva
         livenessProbe:
           httpGet:
             path: /actuator/health
             port: 5002
-          initialDelaySeconds: 60
+          initialDelaySeconds: 0
           periodSeconds: 10
-          timeoutSeconds: 3
+          timeoutSeconds: 5
           failureThreshold: 3
         
+        # Readiness probe - Verifica que la app esté lista para recibir tráfico
         readinessProbe:
           httpGet:
             path: /actuator/health
             port: 5002
-          initialDelaySeconds: 45
+          initialDelaySeconds: 0
           periodSeconds: 5
-          timeoutSeconds: 3
+          timeoutSeconds: 5
           failureThreshold: 3
         
         # Recursos
