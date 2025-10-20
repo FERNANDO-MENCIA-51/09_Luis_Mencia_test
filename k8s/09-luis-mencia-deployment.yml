@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: luis-mencia-deployment
+  namespace: luis-mencia-namespace
+  labels:
+    app: authentication-service
+    version: "1.0"
+spec:
+  replicas: 2 
+  selector:
+    matchLabels:
+      app: authentication-service
+  template:
+    metadata:
+      labels:
+        app: authentication-service
+        version: "1.0"
+    spec:
+      containers:
+      - name: authentication-service
+        image: luismencia/09-luis-mencia:1.0
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 5002
+          name: http
+          protocol: TCP
+        
+        # Variables de entorno desde el Secret
+        envFrom:
+        - secretRef:
+            name: luis-mencia-secret
+        
+        # Health checks
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 5002
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 3
+          failureThreshold: 3
+        
+        readinessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 5002
+          initialDelaySeconds: 45
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        
+        # Recursos
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        
+        # Variables JVM
+        env:
+        - name: JAVA_OPTS
+          value: "-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
+      
+      restartPolicy: Always
