@@ -1,0 +1,64 @@
+spring:
+  application:
+    name: AuthenticationService
+
+  # Configuración R2DBC para Neon PostgreSQL
+  r2dbc:
+    url: ${DATABASE_URL:r2dbc:postgresql://ep-plain-sound-ad14svv9-pooler.c-2.us-east-1.aws.neon.tech:5432/ms-authenticationService?sslmode=require&preparedStatementCacheQueries=0&connectTimeout=30000}
+    username: ${DB_USERNAME:neondb_owner}
+    password: ${DB_PASSWORD:npg_HFo2ij7rgRbN}
+    pool:
+      initial-size: 1
+      max-size: 10
+      max-idle-time: 5m
+      max-acquire-time: 30s
+      max-life-time: 30m
+      max-create-connection-time: 30s
+      validation-query: SELECT 1
+      validation-depth: REMOTE
+
+  # Configuración de inicialización de base de datos
+  sql:
+    init:
+      mode: never # Las tablas ya existen en Neon
+
+# Configuración del servidor
+server:
+  port: ${PORT:5002}
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: on_param
+    include-exception: false
+
+# Configuración JWT
+jwt:
+  secret: ${JWT_SECRET:your-secret-key-here-min-256-bits-change-in-production}
+  expiration: ${JWT_EXPIRATION:3600000} # 1 hora en milisegundos
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:86400000} # 24 horas
+
+# Configuración de Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# Configuración de logging
+logging:
+  level:
+    root: INFO
+    "[edu.pe.vallegrande.AuthenticationService]": DEBUG
+    "[io.r2dbc.postgresql]": DEBUG
+    "[io.r2dbc.pool]": DEBUG
+    "[org.springframework.r2dbc]": DEBUG
+    "[org.springframework.security]": INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/authentication-service.log
+    max-size: 10MB
+    max-history: 30
